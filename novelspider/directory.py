@@ -3,7 +3,17 @@ from bs4 import BeautifulSoup
 import pandas as pd
 import chardet
 import re
-from ebooklib import epub
+from searchnovle import search_novel
+
+"""获取小说名,小说目录名，小说目录链接，每个链接对应着每章的小说内容,小说名实际已经在sercahnovel中已经抓取到，
+所以不必在这个函数里再抓取了，但是我是先写的这个代码，不删除也行"""
+title_and_author,title_link = search_novel()
+# print(title_and_author)
+# print(title_link)
+# 显示搜索结果给用户
+print("搜索结果：")
+for i, name in enumerate(title_and_author):
+    print(f"{i + 1}. {name}")
 
 def getDirectoryAndLinks():
     # 设置代理

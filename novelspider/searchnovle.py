@@ -3,22 +3,14 @@ from bs4 import BeautifulSoup
 import chardet
 import re
 from ebooklib import epub
-from directory import getDirectoryAndLinks
 from concurrent.futures import ThreadPoolExecutor, as_completed  # 新增导入多线程模块
 from requests.adapters import HTTPAdapter
 from urllib3.util.retry import Retry
+import urllib.parse  #URL编码解码模块
 
-# 设置代理
-proxies = {
-    'http': 'http://127.0.0.1:7890',
-    'https': 'http://127.0.0.1:7890',
-}
-header = {
-    'Referer': 'https://69shuba.cx/index.html',
-    'User-Agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/127.0.0.0 Safari/537.36'
-}
 
-# 创建一个带重试机制的 Session,写这个代码是为了解决抓取代码出现443的错误
+
+# 创建一个带重试机制的 Session,写这个代码是为了解决抓取代码出现443的错误，就是解决多线程有的线程因为网络原因抓取失败的问题
 session = requests.Session()
 
 # 配置重试策略
@@ -31,12 +23,53 @@ retries = Retry(
 
 # 为 session 装载适配器并应用重试策略
 session.mount('https://', HTTPAdapter(max_retries=retries))
-request_url = 'https://69shuba.cx/modules/article/search.php'
+
 
 def search_novel():
     try:
-        response = session.get(request_url, headers=header, proxies=proxies, timeout=10)  # 新增 timeout 参数以防止请求卡住
+        # 设置代理
+        proxies = {
+            'http': 'http://127.0.0.1:7890',
+            'https': 'http://127.0.0.1:7890',
+        }
+        header = {
+            'Referer': 'https://69shuba.cx/index.html',
+            'User-Agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/127.0.0.0 Safari/537.36'
+        }
+        request_url = 'https://69shuba.cx/modules/article/search.php'
+
+        novel_name = input("请输入要搜索的小说名：")
+        encode_novel_name = urllib.parse.quote(novel_name, encoding='gbk')
+        form_data = {
+            'searchkey': encode_novel_name,
+            'submit': 'Search'
+
+        }
+        response = requests.post(request_url, headers=header, proxies=proxies, data=form_data, timeout=10)    # 新增 timeout 参数以防止请求卡住
         detected_encoding = chardet.detect(response.content)['encoding']
         response.encoding = detected_encoding if detected_encoding else 'gbk'  # 设置编码为检测到的编码
+
+        soup = BeautifulSoup(response.text, 'html.parser')
+        div_box = soup.find_all('div', class_='newbox')
+        li_box =  div_box[0].find_all('li')
+        title_and_author = []
+        title_link =[]
+        # 遍历所有的 <li> 标签
+        for li in li_box:
+            title_tag = li.find('h3').find('a', href=True)
+            author_tag = li.find('div', class_='labelbox').find('label')
+            # 检查标签是否存在
+            if title_tag and author_tag:
+                title = title_tag.get_text(strip=True)
+                auther= author_tag.get_text(strip=True)
+                title_and_author_single = title+' 作者：'+auther
+                title_and_author.append(title_and_author_single)
+                title_link_single = title_tag['href']
+                title_link.append(title_link_single)
+        # print(title_and_author)
+        # print(title_link)
+        return title_and_author,title_link
     except Exception as e:
-     print(e)
+        print(e)
+
+# search_novel()
