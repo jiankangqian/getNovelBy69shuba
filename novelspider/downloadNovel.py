@@ -7,6 +7,16 @@ from directory import getDirectoryAndLinks
 from concurrent.futures import ThreadPoolExecutor, as_completed  # 新增导入多线程模块
 from requests.adapters import HTTPAdapter
 from urllib3.util.retry import Retry
+from searchnovle import search_novel
+
+# title_and_author,title_link = search_novel()
+# 获取章节目录和链接
+linksArray, directoryArray, novelName,request_all_directory_url = getDirectoryAndLinks()
+
+print(linksArray)
+print(directoryArray)
+print(novelName)
+print(request_all_directory_url)
 
 # 设置代理
 proxies = {
@@ -14,16 +24,11 @@ proxies = {
     'https': 'http://127.0.0.1:7890',
 }
 header = {
-    'Referer': 'https://69shuba.cx/book/58911/',
+    # 'Referer': 'https://69shuba.cx/book/58911/',
+     'Referer': request_all_directory_url,
     'User-Agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/127.0.0.0 Safari/537.36'
 }
 
-# 获取章节目录和链接
-linksArray, directoryArray, novelName = getDirectoryAndLinks()
-
-print(linksArray)
-print(directoryArray)
-print(novelName)
 
 chapterDataList = []  # 用于存储带有序号的章节数据
 
@@ -75,7 +80,7 @@ def download_chapter(index, oneLink):
 
 
 # 使用多线程并发下载章节内容
-with ThreadPoolExecutor(max_workers=5) as executor:  # 使用线程池，max_workers 可根据需求调整
+with ThreadPoolExecutor(max_workers=50) as executor:  # 使用线程池，max_workers 可根据需求调整
     future_to_url = {executor.submit(download_chapter, i, link): link for i, link in enumerate(linksArray)}  # 提交所有任务
     for future in as_completed(future_to_url):
         index, chapterName, mainContext = future.result()

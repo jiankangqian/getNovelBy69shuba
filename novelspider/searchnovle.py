@@ -33,28 +33,48 @@ def search_novel():
             'https': 'http://127.0.0.1:7890',
         }
         header = {
+            # 'Referer': 'https://69shuba.cx/index.html',
+            # 'User-Agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/128.0.0.0 Safari/537.36',
+            # 'Cookie': 'shuba=11786-11981-22735-5482'
+            'sec-ch-ua-platform': '"Windows"',
+            'DNT': '1',
+            'Upgrade-Insecure-Requests': '1',
+            'User-Agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/128.0.0.0 Safari/537.36',
+            'Content-Type': 'application/x-www-form-urlencoded',
+            'Accept': 'text/html,application/xhtml+xml,application/xml;q=0.9,image/avif,image/webp,image/apng,*/*;q=0.8',
+            'Sec-Fetch-Site': 'same-origin',
+            'Sec-Fetch-Mode': 'navigate',
+            'Sec-Fetch-User': '?1',
+            'Sec-Fetch-Dest': 'document',
+            'Host': '69shu.me',
             'Referer': 'https://69shuba.cx/index.html',
-            'User-Agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/127.0.0.0 Safari/537.36'
         }
         request_url = 'https://69shuba.cx/modules/article/search.php'
+        # 设置 Cookie
+        cookies = {
+            'shuba': '11786-11981-22735-5482',
+            'jieqiVisitTime': 'jieqiArticlesearchTime%3D1725364996',
+        }
 
         novel_name = input("请输入要搜索的小说名：")
+        # novel_name ='仙府长生'
         encode_novel_name = urllib.parse.quote(novel_name, encoding='gbk')
         form_data = {
             'searchkey': encode_novel_name,
             'submit': 'Search'
 
         }
-        response = requests.post(request_url, headers=header, proxies=proxies, data=form_data, timeout=10)    # 新增 timeout 参数以防止请求卡住
+        response = session.post(request_url, headers=header,cookies=cookies, proxies=proxies, data=form_data, timeout=10)    # 新增 timeout 参数以防止请求卡住
         detected_encoding = chardet.detect(response.content)['encoding']
         response.encoding = detected_encoding if detected_encoding else 'gbk'  # 设置编码为检测到的编码
-
+        # print(response.text)
         soup = BeautifulSoup(response.text, 'html.parser')
         div_box = soup.find_all('div', class_='newbox')
         li_box =  div_box[0].find_all('li')
         title_and_author = []
         title_link =[]
         # 遍历所有的 <li> 标签
+        t = 0;
         for li in li_box:
             title_tag = li.find('h3').find('a', href=True)
             author_tag = li.find('div', class_='labelbox').find('label')
@@ -66,8 +86,11 @@ def search_novel():
                 title_and_author.append(title_and_author_single)
                 title_link_single = title_tag['href']
                 title_link.append(title_link_single)
-        # print(title_and_author)
-        # print(title_link)
+                t = t + 1
+            else:
+                print("标签缺失，跳过该项",t)
+        print(title_and_author)
+        print(title_link)
         return title_and_author,title_link
     except Exception as e:
         print(e)
