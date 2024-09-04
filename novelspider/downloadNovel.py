@@ -51,7 +51,8 @@ def download_chapter(index, oneLink):
     try:
         response = session.get(oneLink, headers=header, proxies=proxies, timeout=10)  # 新增 timeout 参数以防止请求卡住
         detected_encoding = chardet.detect(response.content)['encoding']
-        response.encoding = detected_encoding if detected_encoding else 'gbk'  # 设置编码为检测到的编码
+        # response.encoding = detected_encoding if detected_encoding else 'utf-8'  # 设置编码为检测到的编码
+        response.encoding = 'gbk'
         soup = BeautifulSoup(response.text, 'html.parser')
         result = soup.find_all(name='div', class_='txtnav')
         text = soup.get_text(separator='\n', strip=True)  # 用换行符分隔不同段落

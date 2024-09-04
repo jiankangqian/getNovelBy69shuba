@@ -10,22 +10,22 @@ import urllib.parse  #URL编码解码模块
 
 
 
-# 创建一个带重试机制的 Session,写这个代码是为了解决抓取代码出现443的错误，就是解决多线程有的线程因为网络原因抓取失败的问题
-session = requests.Session()
-
-# 配置重试策略
-retries = Retry(
-    total=5,                  # 总重试次数
-    backoff_factor=0.3,       # 每次重试延迟时间的增长因子
-    status_forcelist=[500, 502, 503, 504,443],  # 遇到这些状态码时触发重试
-    allowed_methods=["HEAD", "GET", "OPTIONS"],  # 哪些HTTP方法允许重试
-)
-
-# 为 session 装载适配器并应用重试策略
-session.mount('https://', HTTPAdapter(max_retries=retries))
-
 
 def search_novel():
+    # 创建一个带重试机制的 Session,写这个代码是为了解决抓取代码出现443的错误，就是解决多线程有的线程因为网络原因抓取失败的问题
+    session = requests.Session()
+
+    # 配置重试策略
+    retries = Retry(
+        total=5,  # 总重试次数
+        backoff_factor=0.3,  # 每次重试延迟时间的增长因子
+        status_forcelist=[500, 502, 503, 504, 443],  # 遇到这些状态码时触发重试
+        allowed_methods=["HEAD", "GET", "OPTIONS"],  # 哪些HTTP方法允许重试
+    )
+
+    # 为 session 装载适配器并应用重试策略
+    session.mount('https://', HTTPAdapter(max_retries=retries))
+
     try:
         # 设置代理
         proxies = {
@@ -91,8 +91,8 @@ def search_novel():
                 print("标签缺失，跳过该项",t)
         print(title_and_author)
         print(title_link)
-        return title_and_author,title_link
+        return title_and_author if title_and_author else [],title_link if title_link else []
     except Exception as e:
         print(e)
 
-# search_novel()
+search_novel()
